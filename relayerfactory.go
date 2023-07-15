@@ -5,12 +5,14 @@ import (
 	"testing"
 
 	"github.com/docker/docker/client"
+	"go.uber.org/zap"
+
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 	"github.com/strangelove-ventures/interchaintest/v7/relayer"
 	"github.com/strangelove-ventures/interchaintest/v7/relayer/hermes"
 	"github.com/strangelove-ventures/interchaintest/v7/relayer/hyperspace"
+	"github.com/strangelove-ventures/interchaintest/v7/relayer/icq"
 	"github.com/strangelove-ventures/interchaintest/v7/relayer/rly"
-	"go.uber.org/zap"
 )
 
 // RelayerFactory describes how to start a Relayer.
@@ -68,6 +70,8 @@ func (f builtinRelayerFactory) Build(
 		)
 	case ibc.Hermes:
 		return hermes.NewHermesRelayer(f.log, t.Name(), cli, networkID, f.options...)
+	case ibc.Icq:
+		return icq.NewIcqRelayer(f.log, t.Name(), cli, networkID, f.options...)
 	default:
 		panic(fmt.Errorf("RelayerImplementation %v unknown", f.impl))
 	}
