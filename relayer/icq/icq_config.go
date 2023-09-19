@@ -6,18 +6,23 @@ import (
 
 // NewConfig returns a icq Config with an entry for each of the provided ChainConfigs.
 func NewConfig(chainConfigs ...ChainConfig) Config {
-	var chains []Chain
+	chains := make(map[string]Chain, 0)
+	var defaultChainID string
 	for _, icqCfg := range chainConfigs {
 		chainCfg := icqCfg.cfg
 
-		chains = append(chains, Chain{
+		if defaultChainID == "" {
+			defaultChainID = icqCfg.keyName
+		}
+
+		chains[chainCfg.ChainID] = Chain{
 			Key:            icqCfg.keyName,
 			ChainId:        chainCfg.ChainID,
 			RPCAddr:        icqCfg.rpcAddr,
 			GrpcAddr:       fmt.Sprintf("http://%s", icqCfg.grpcAddr),
 			AccountPrefix:  chainCfg.Bech32Prefix,
 			KeyRingBackend: "test",
-			GasAdjustment:  "10",
+			GasAdjustment:  10,
 			GasPrices:      chainCfg.GasPrices,
 			KeyDirectory:   icqKeyPath,
 			Debug:          false,
@@ -25,19 +30,18 @@ func NewConfig(chainConfigs ...ChainConfig) Config {
 			BlockTimeout:   "",
 			OutputFormat:   "json",
 			SignMode:       "direct",
-		},
-		)
+		}
 	}
 
 	return Config{
-		DefaultChain: chains[0].ChainId, // using the first chain as the default one
+		DefaultChain: defaultChainID, // using the first chain as the default one
 		Chains:       chains,
 	}
 }
 
 type Config struct {
-	DefaultChain string  `yaml:"default_chain"`
-	Chains       []Chain `yaml:"chains"`
+	DefaultChain string           `yaml:"default_chain"`
+	Chains       map[string]Chain `yaml:"chains"`
 }
 
 type Chain struct {
@@ -47,7 +51,7 @@ type Chain struct {
 	GrpcAddr       string `yaml:"grpc-addr"`
 	AccountPrefix  string `yaml:"account-prefix"`
 	KeyRingBackend string `yaml:"keyring-backend"`
-	GasAdjustment  string `yaml:"gas-adjustment"`
+	GasAdjustment  int    `yaml:"gas-adjustment"`
 	GasPrices      string `yaml:"gas-prices"`
 	KeyDirectory   string `yaml:"key-directory"`
 	Debug          bool   `yaml:"debug"`
