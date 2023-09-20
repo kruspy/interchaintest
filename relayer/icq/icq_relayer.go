@@ -43,17 +43,12 @@ func NewIcqRelayer(
 	testName string,
 	cli *client.Client,
 	networkID string,
-	options ...relayer.RelayerOption,
+	options ...relayer.RelayerOpt,
 ) *Relayer {
 	c := commander{log: log}
-	for _, opt := range options {
-		switch o := opt.(type) {
-		case relayer.RelayerOptionExtraStartFlags:
-			c.extraStartFlags = o.Flags
-		}
-	}
 	options = append(options, relayer.HomeDir(icqHome))
 	dr, err := relayer.NewDockerRelayer(context.TODO(), log, testName, cli, networkID, c, options...)
+	c.extraStartFlags = dr.GetExtraStartupFlags()
 	if err != nil {
 		panic(err)
 	}
