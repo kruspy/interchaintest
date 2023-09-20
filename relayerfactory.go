@@ -2,7 +2,6 @@ package interchaintest
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/docker/docker/client"
 	"go.uber.org/zap"
@@ -15,11 +14,15 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/relayer/rly"
 )
 
+type TestName interface {
+	Name() string
+}
+
 // RelayerFactory describes how to start a Relayer.
 type RelayerFactory interface {
 	// Build returns a Relayer associated with the given arguments.
 	Build(
-		t *testing.T,
+		t TestName,
 		cli *client.Client,
 		networkID string,
 	) ibc.Relayer
@@ -38,28 +41,31 @@ type RelayerFactory interface {
 type builtinRelayerFactory struct {
 	impl    ibc.RelayerImplementation
 	log     *zap.Logger
-	options relayer.RelayerOptions
+	options []relayer.RelayerOpt
+	version string
 }
 
-func NewBuiltinRelayerFactory(impl ibc.RelayerImplementation, logger *zap.Logger, options ...relayer.RelayerOption) RelayerFactory {
-	return builtinRelayerFactory{impl: impl, log: logger, options: options}
+func NewBuiltinRelayerFactory(impl ibc.RelayerImplementation, logger *zap.Logger, options ...relayer.RelayerOpt) RelayerFactory {
+	return &builtinRelayerFactory{impl: impl, log: logger, options: options}
 }
 
 // Build returns a relayer chosen depending on f.impl.
-func (f builtinRelayerFactory) Build(
-	t *testing.T,
+func (f *builtinRelayerFactory) Build(
+	t TestName,
 	cli *client.Client,
 	networkID string,
 ) ibc.Relayer {
 	switch f.impl {
 	case ibc.CosmosRly:
-		return rly.NewCosmosRelayer(
+		r := rly.NewCosmosRelayer(
 			f.log,
 			t.Name(),
 			cli,
 			networkID,
 			f.options...,
 		)
+		f.setRelayerVersion(r.ContainerImage())
+		return r
 	case ibc.Hyperspace:
 		return hyperspace.NewHyperspaceRelayer(
 			f.log,
@@ -69,7 +75,9 @@ func (f builtinRelayerFactory) Build(
 			f.options...,
 		)
 	case ibc.Hermes:
-		return hermes.NewHermesRelayer(f.log, t.Name(), cli, networkID, f.options...)
+		r := hermes.NewHermesRelayer(f.log, t.Name(), cli, networkID, f.options...)
+		f.setRelayerVersion(r.ContainerImage())
+		return r
 	case ibc.Icq:
 		return icq.NewIcqRelayer(f.log, t.Name(), cli, networkID, f.options...)
 	default:
@@ -77,25 +85,20 @@ func (f builtinRelayerFactory) Build(
 	}
 }
 
-func (f builtinRelayerFactory) Name() string {
+func (f *builtinRelayerFactory) setRelayerVersion(di ibc.DockerImage) {
+	f.version = di.Version
+}
+
+func (f *builtinRelayerFactory) Name() string {
 	switch f.impl {
 	case ibc.CosmosRly:
-		// This is using the string "rly" instead of rly.ContainerImage
-		// so that the slashes in the image repository don't add ambiguity
-		// to subtest paths, when the factory name is used in calls to t.Run.
-		for _, opt := range f.options {
-			switch o := opt.(type) {
-			case relayer.RelayerOptionDockerImage:
-				return "rly@" + o.DockerImage.Version
-			}
+		if f.version == "" {
+			return "rly@" + f.version
 		}
 		return "rly@" + rly.DefaultContainerVersion
 	case ibc.Hermes:
-		for _, opt := range f.options {
-			switch o := opt.(type) {
-			case relayer.RelayerOptionDockerImage:
-				return "hermes@" + o.DockerImage.Version
-			}
+		if f.version == "" {
+			return "hermes@" + f.version
 		}
 		return "hermes@" + hermes.DefaultContainerVersion
 	default:
