@@ -86,7 +86,7 @@ func (commander) Flush(pathName, channelID, homeDir string) []string {
 }
 
 func (commander) GeneratePath(srcChainID, dstChainID, pathName, homeDir string) []string {
-	return []string{"ls"} // TODO: Find a better solution here
+	return []string{}
 }
 
 func (commander) UpdatePath(pathName, homeDir string, filter ibc.ChannelFilter) []string {
@@ -106,11 +106,11 @@ func (commander) GetClients(chainID, homeDir string) []string {
 }
 
 func (commander) LinkPath(pathName, homeDir string, channelOpts ibc.CreateChannelOptions, clientOpt ibc.CreateClientOptions) []string {
-	return []string{"ls"} // TODO: Find a better solution here
+	return []string{}
 }
 
 func (c commander) RestoreKey(chainID, keyName, coinType, mnemonic, homeDir string) []string {
-	return []string{icq, "keys", "restore", keyName, mnemonic, "--chain", chainID, "--home", homeDir + "/.icq"} // TODO: Fix Paths
+	return []string{icq, "keys", "restore", keyName, mnemonic, "--chain", chainID, "--home", homeDir}
 }
 
 func (c commander) StartRelayer(homeDir string, pathNames ...string) []string {

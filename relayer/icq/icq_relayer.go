@@ -18,9 +18,9 @@ const (
 	DefaultContainerVersion = "latest"
 
 	icqDefaultUidGid = "1000:1000"
-	icqHome          = "/home/icq"
-	icqConfigPath    = ".icq/config.yaml"
-	icqKeyPath       = ".icq/keys"
+	icqHome          = "/home/icq/.icq"
+	icqConfigPath    = "config.yaml"
+	icqKeyPath       = "keys"
 )
 
 var _ ibc.Relayer = &Relayer{}
