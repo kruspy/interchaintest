@@ -15,7 +15,7 @@ import (
 const (
 	icq                     = "interchain-queries"
 	defaultContainerImage   = "marcpt/interchain-queries"
-	DefaultContainerVersion = "latest-amd64"
+	DefaultContainerVersion = "latest"
 
 	icqDefaultUidGid = "1000:1000"
 	icqHome          = "/home/icq"
