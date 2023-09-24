@@ -114,7 +114,7 @@ func (c commander) RestoreKey(chainID, keyName, coinType, mnemonic, homeDir stri
 }
 
 func (c commander) StartRelayer(homeDir string, pathNames ...string) []string {
-	return []string{icq, "run"}
+	return []string{icq, "run", "--home", homeDir}
 }
 
 func (commander) UpdateClients(pathName, homeDir string) []string {
